@@ -105,11 +105,50 @@ source /path/to/.env
 backup_name="backup_$(date '+%Y%m%d_%H%M%S').zip"
 backup_path="$BACKUP_DIR$backup_name"
 
-zip -r "$backup_path" "$BACKUP_FOLDER"
+zip -9 -r "$backup_path" "$BACKUP_FOLDER"
 
-curl -F chat_id="$TELEGRAM_CHAT_ID" \
-     -F document=@"$backup_path" \
-     "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+file_size=$(stat -c%s "$backup_path")
+
+max_size=$((50 * 1024 * 1024))
+
+if [ "$file_size" -le "$max_size" ]; then
+    echo "Sending backup directly..."
+    curl -F chat_id="$TELEGRAM_CHAT_ID" \
+         -F document=@"$backup_path" \
+         "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+    
+    if [ $? -eq 0 ]; then
+        echo "Backup sent successfully!"
+    else
+        echo "Failed to send the backup. Please check your Telegram settings."
+    fi
+else
+    echo "Backup file is too large. Splitting into smaller parts..."
+
+    split -b 48M "$backup_path" "${backup_path%.*}_part_"
+
+    part_number=1
+    for part in "${backup_path%.*}"_part_*; do
+        part_renamed="${backup_path%.*}_part_${part_number}.zip"
+        mv "$part" "$part_renamed"
+
+        echo "Sending part: $part_renamed..."
+        curl -F chat_id="$TELEGRAM_CHAT_ID" \
+             -F document=@"$part_renamed" \
+             "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+        
+        if [ $? -eq 0 ]; then
+            echo "Part $part_renamed sent successfully!"
+        else
+            echo "Failed to send part $part_renamed. Please check your Telegram settings."
+        fi
+
+        part_number=$((part_number + 1))
+    done
+fi
+
+rm -f "${backup_path%.*}_part_"*
+
 EOF
 
 sed -i "s|/path/to/.env|$(pwd)/.env|g" $BACKUP_SCRIPT
