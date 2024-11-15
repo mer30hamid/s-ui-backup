@@ -3,27 +3,41 @@
 ENV_FILE=".env"
 BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
 
+GREEN="\033[1;32m"
+RED="\033[1;31m"
+YELLOW="\033[1;33m"
+CYAN="\033[1;36m"
+RESET="\033[0m"
+BOLD="\033[1m"
+
+print_message() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${RESET}"
+}
+
 if [[ "$1" == "-u" ]]; then
-    echo "Uninstalling the backup script..."
+    print_message $RED "Uninstalling the backup script..."
 
     if [ -f $ENV_FILE ]; then
         rm $ENV_FILE
-        echo "Removed $ENV_FILE"
+        print_message $RED "Removed $ENV_FILE"
     else
-        echo "$ENV_FILE does not exist."
+        print_message $YELLOW "$ENV_FILE does not exist."
     fi
 
     if [ -f $BACKUP_SCRIPT ]; then
         rm $BACKUP_SCRIPT
-        echo "Removed $BACKUP_SCRIPT"
+        print_message $RED "Removed $BACKUP_SCRIPT"
     else
-        echo "$BACKUP_SCRIPT does not exist."
+        print_message $YELLOW "$BACKUP_SCRIPT does not exist."
     fi
 
+    # Remove the cron job
     crontab -l | grep -v "$BACKUP_SCRIPT" | crontab -
-    echo "Cron job removed."
+    print_message $RED "Cron job removed."
 
-    echo "Uninstallation complete."
+    print_message $GREEN "Uninstallation complete."
     exit 0
 fi
 
@@ -33,41 +47,45 @@ prompt_input() {
     local default_value=$3
 
     if [ -n "$default_value" ]; then
-        read -p "$prompt_message [$default_value]: " input
+        echo -e "${CYAN}${prompt_message} [${default_value}]:${RESET} "
+        read input
         input=${input:-$default_value}
     else
-        read -p "$prompt_message: " input
+        echo -e "${CYAN}${prompt_message}:${RESET} "
+        read input
     fi
     echo "$var_name=\"$input\"" >> $ENV_FILE
 }
 
 if [ -f $ENV_FILE ]; then
-    echo "Existing configuration found:"
+    print_message $YELLOW "Existing configuration found:"
     cat $ENV_FILE
     echo
-    read -p "Do you want to reset the configuration? (y/n): " reset_config
+    echo -e "${CYAN}Do you want to reset the configuration? (y/n):${RESET} "
+    read reset_config
 
     if [[ "$reset_config" != "y" ]]; then
-        echo "Using existing configuration. Exiting setup."
+        print_message $GREEN "Using existing configuration. Exiting setup."
         exit 0
     fi
 
-    echo "Resetting configuration..."
+    print_message $YELLOW "Resetting configuration..."
     rm $ENV_FILE
 fi
 
-echo "Configuring the backup script..."
+print_message $CYAN "Configuring the backup script..."
 
 prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
 
 prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
 
-read -p "Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]: " backup_interval
+echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
+read backup_interval
 backup_interval=${backup_interval:-1}
 if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
     echo "BACKUP_INTERVAL=\"$backup_interval\"" >> $ENV_FILE
 else
-    echo "Invalid input. Defaulting to daily (1 day)."
+    print_message $RED "Invalid input. Defaulting to daily (1 day)."
     echo "BACKUP_INTERVAL=\"1\"" >> $ENV_FILE
     backup_interval=1
 fi
@@ -104,4 +122,12 @@ cron_schedule="*/$cron_interval * * * *"
 crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT" | crontab -
 (crontab -l 2>/dev/null; echo "$cron_schedule $BACKUP_SCRIPT") | crontab -
 
-echo "Configuration completed. The backup script has been set up and scheduled."
+print_message $CYAN "Sending the first backup..."
+bash $BACKUP_SCRIPT
+if [ $? -eq 0 ]; then
+    print_message $GREEN "First backup sent successfully!"
+else
+    print_message $RED "Failed to send the first backup. Please check the configuration."
+fi
+
+print_message $GREEN "Configuration completed. The backup script has been set up and scheduled."
