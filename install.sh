@@ -40,7 +40,29 @@ if [[ "$1" == "-u" ]]; then
     print_message $GREEN "Uninstallation complete."
     exit 0
 fi
+install_required_packages() {
+    echo "Checking for required packages..."
 
+    # List of required packages
+    REQUIRED_PACKAGES=("zip" "curl" "split")
+
+    for pkg in "${REQUIRED_PACKAGES[@]}"; do
+        # Check if package is installed
+        if ! command -v "$pkg" &> /dev/null; then
+            echo "$pkg not found. Installing..."
+            # Installing required package
+            sudo apt update && sudo apt install -y "$pkg"
+            if [ $? -eq 0 ]; then
+                echo "$pkg installed successfully!"
+            else
+                echo "Failed to install $pkg. Please check your system."
+                exit 1
+            fi
+        else
+            echo "$pkg is already installed."
+        fi
+    done
+}
 prompt_input() {
     local var_name=$1
     local prompt_message=$2
