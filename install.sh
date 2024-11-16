@@ -237,7 +237,7 @@ show_menu() {
   ${green}2.${plain} Start Cronjob (@daily)
   ${green}3.${plain} Stop Cronjob
 ————————————————————————————————
-  ${green}9.${plain} Uninstall
+  ${green}4.${plain} Uninstall
 ————————————————————————————————
  "
     show_status $ENV_FILE
@@ -267,7 +267,7 @@ show_menu() {
         clear
         cronStop
         ;;
-    9)
+    4)
         clear
         Uninstall
         ;;
