@@ -200,17 +200,29 @@ EOF
 
 cronStart() {
     if [ -f $BACKUP_SCRIPT ]; then
-
-        (
-            crontab -l 2>/dev/null
-            echo "0 0 */1 * * $BACKUP_SCRIPT"
-        ) | crontab -
+        if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT"; then
+            echo -e "${green}Cronjob already actived${plain}"
+            # exit 0
+            before_show_menu
+        else
+            echo -e "${green}Cronjob successfuly actived${plain}"
+            (
+                crontab -l 2>/dev/null
+                echo "0 0 */1 * * $BACKUP_SCRIPT"
+            ) | crontab -
+        fi
     else
-        echo "cronjob not created"
+        LOGE "backup Bash not created. config first"
     fi
 }
 cronStop() {
-    crontab -l | grep -v "$BACKUP_SCRIPT" | crontab -
+    if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT"; then
+        (crontab -r | grep -q "$BACKUP_SCRIPT")
+        echo "removed"
+        before_show_menu
+    else
+        echo "cronjob not actived"
+    fi
 }
 
 show_menu() {
@@ -222,7 +234,7 @@ show_menu() {
 ————————————————————————————————
   ${green}1.${plain} Let's Config 
 ————————————————————————————————
-  ${green}2.${plain} Start Cronjob
+  ${green}2.${plain} Start Cronjob (@daily)
   ${green}3.${plain} Stop Cronjob
 ————————————————————————————————
   ${green}9.${plain} Uninstall
@@ -230,13 +242,13 @@ show_menu() {
  "
     show_status $ENV_FILE
 
-    if crontab -l | grep -q "$BACKUP_SCRIPT"; then
+    if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT"; then
         echo -e "Cronjob state: ${green}Active${plain}"
     else
         echo -e "Cronjob state: ${yellow}Not active${plain}"
     fi
 
-    echo && read -p "Please enter your selection [0-9]: " num
+    echo && read -p "Please enter your selection [0-4]: " num
 
     case "${num}" in
     0)
@@ -260,7 +272,7 @@ show_menu() {
         Uninstall
         ;;
     *)
-        LOGE "Please enter the correct number [0-1]"
+        LOGE "Please enter the correct number [0-4]"
         ;;
     esac
 }
