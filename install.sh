@@ -236,7 +236,7 @@ show_menu() {
         echo -e "Cronjob state: ${yellow}Not active${plain}"
     fi
 
-    echo && read -p "Please enter your selection [0-27]: " num
+    echo && read -p "Please enter your selection [0-9]: " num
 
     case "${num}" in
     0)
