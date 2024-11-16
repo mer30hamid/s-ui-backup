@@ -2,6 +2,13 @@
 
 ENV_FILE=".env"
 BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
+BACKUP_FOLDER="/usr/local/s-ui/"
+BACKUP_DIR="/tmp/backups/"
+
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+plain='\033[0m'
 
 GREEN="\033[1;32m"
 RED="\033[1;31m"
@@ -9,14 +16,45 @@ YELLOW="\033[1;33m"
 CYAN="\033[1;36m"
 RESET="\033[0m"
 BOLD="\033[1m"
+clear
 
+before_show_menu() {
+    echo && echo -n -e "${yellow}Press enter to return to the main menu: ${plain}" && read temp
+    show_menu
+}
+
+function LOGE() {
+    clear
+    echo -e "${red}[ERR] $* ${plain}"
+}
+
+check_status() {
+    if [[ -f $1 ]]; then
+        return 0
+    else
+        return 1
+
+    fi
+}
+
+show_status() {
+    check_status $1
+    case $? in
+    0)
+        echo -e "${1} state: ${green}Existing configuration found${plain}"
+        ;;
+    1)
+        echo -e "${1} state: ${yellow}Not found${plain}"
+        ;;
+    esac
+}
 print_message() {
     local color=$1
     local message=$2
     echo -e "${color}${message}${RESET}"
 }
 
-if [[ "$1" == "-u" ]]; then
+Uninstall() {
     print_message $RED "Uninstalling the backup script..."
 
     if [ -f $ENV_FILE ]; then
@@ -33,19 +71,17 @@ if [[ "$1" == "-u" ]]; then
         print_message $YELLOW "$BACKUP_SCRIPT does not exist."
     fi
 
-    # Remove the cron job
     crontab -l | grep -v "$BACKUP_SCRIPT" | crontab -
     print_message $RED "Cron job removed."
-
     print_message $GREEN "Uninstallation complete."
-    exit 0
-fi
+    before_show_menu
+
+}
 
 prompt_input() {
     local var_name=$1
     local prompt_message=$2
     local default_value=$3
-
     if [ -n "$default_value" ]; then
         echo -e "${CYAN}${prompt_message} [${default_value}]:${RESET} "
         read input
@@ -54,71 +90,47 @@ prompt_input() {
         echo -e "${CYAN}${prompt_message}:${RESET} "
         read input
     fi
-    echo "$var_name=\"$input\"" >> $ENV_FILE
+    echo "$var_name=\"$input\"" >>$ENV_FILE
 }
 
-if [ -f $ENV_FILE ]; then
-    print_message $YELLOW "Existing configuration found:"
-    cat $ENV_FILE
-    echo
-    echo -e "${CYAN}Do you want to reset the configuration? (y/n):${RESET} "
-    read reset_config
+configurat() {
+    if [ -f $ENV_FILE ]; then
+        print_message $YELLOW "Existing configuration found:"
+        cat $ENV_FILE
+        echo
+        echo -e "${CYAN}Do you want to reset the configuration? (y/n):${RESET} "
+        read reset_config
 
-    if [[ "$reset_config" != "y" ]]; then
-        print_message $GREEN "Using existing configuration. Exiting setup."
-        exit 0
+        if [[ "$reset_config" != "y" ]]; then
+            print_message $GREEN "Using existing configuration. Exiting setup."
+            exit 0
+        fi
+
+        print_message $YELLOW "Resetting configuration..."
+        rm $ENV_FILE
     fi
 
-    print_message $YELLOW "Resetting configuration..."
-    rm $ENV_FILE
-fi
+    prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
+    prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
+    echo "BACKUP_FOLDER=\"$BACKUP_FOLDER\"" >>$ENV_FILE
+    echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
 
-print_message $CYAN "Configuring the backup script..."
-    echo "Checking for required packages..."
+    echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
+    read backup_interval
+    backup_interval=${backup_interval:-1}
+    if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
+        echo "BACKUP_INTERVAL=\"$backup_interval\"" >>$ENV_FILE
+    else
+        print_message $RED "Invalid input. Defaulting to daily (1 day)."
+        echo "BACKUP_INTERVAL=\"1\"" >>$ENV_FILE
+        backup_interval=1
+    fi
+    BACKUP_FOLDER="/usr/local/s-ui/"
+    BACKUP_DIR="/tmp/backups/"
 
-    # List of required packages
-    REQUIRED_PACKAGES=("zip" "curl" "split")
+    mkdir -p $BACKUP_DIR
 
-    for pkg in "${REQUIRED_PACKAGES[@]}"; do
-        # Check if package is installed
-        if ! command -v "$pkg" &> /dev/null; then
-            echo "$pkg not found. Installing..."
-            # Installing required package
-            sudo apt update && sudo apt install -y "$pkg"
-            if [ $? -eq 0 ]; then
-                echo "$pkg installed successfully!"
-            else
-                echo "Failed to install $pkg. Please check your system."
-                exit 1
-            fi
-        else
-            echo "$pkg is already installed."
-        fi
-    done
-
-prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
-
-prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
-
-echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
-read backup_interval
-backup_interval=${backup_interval:-1}
-if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
-    echo "BACKUP_INTERVAL=\"$backup_interval\"" >> $ENV_FILE
-else
-    print_message $RED "Invalid input. Defaulting to daily (1 day)."
-    echo "BACKUP_INTERVAL=\"1\"" >> $ENV_FILE
-    backup_interval=1
-fi
-
-BACKUP_FOLDER="/usr/local/s-ui/"
-BACKUP_DIR="/tmp/backups/"
-echo "BACKUP_FOLDER=\"$BACKUP_FOLDER\"" >> $ENV_FILE
-echo "BACKUP_DIR=\"$BACKUP_DIR\"" >> $ENV_FILE
-
-mkdir -p $BACKUP_DIR
-
-cat > $BACKUP_SCRIPT << 'EOF'
+    cat >$BACKUP_SCRIPT <<'EOF'
 #!/bin/bash
 
 source /path/to/.env
@@ -172,22 +184,113 @@ rm -f "${backup_path%.*}_part_"*
 
 EOF
 
-sed -i "s|/path/to/.env|$(pwd)/.env|g" $BACKUP_SCRIPT
+    sed -i "s|/path/to/.env|$(pwd)/.env|g" $BACKUP_SCRIPT
 
-chmod +x $BACKUP_SCRIPT
+    chmod +x $BACKUP_SCRIPT
 
-cron_interval=$((backup_interval * 24 * 60))
-cron_schedule="*/$cron_interval * * * *"
+    cron_schedule="0 0 */$backup_interval * *"
 
-crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT" | crontab -
-(crontab -l 2>/dev/null; echo "$cron_schedule $BACKUP_SCRIPT") | crontab -
+    (crontab -l | grep -q "$BACKUP_SCRIPT") && (crontab -r | grep -q "$BACKUP_SCRIPT") && exit 0
 
-print_message $CYAN "Sending the first backup..."
-bash $BACKUP_SCRIPT
-if [ $? -eq 0 ]; then
-    print_message $GREEN "First backup sent successfully!"
-else
-    print_message $RED "Failed to send the first backup. Please check the configuration."
-fi
+    (
+        crontab -l 2>/dev/null
+        echo "$cron_schedule $BACKUP_SCRIPT"
+    ) | crontab -
+}
 
-print_message $GREEN "Configuration completed. The backup script has been set up and scheduled."
+cronStart() {
+    if [ -f $BACKUP_SCRIPT ]; then
+
+        (
+            crontab -l 2>/dev/null
+            echo "0 0 */1 * * $BACKUP_SCRIPT"
+        ) | crontab -
+    else
+        echo "cronjob not created"
+    fi
+}
+cronStop() {
+    crontab -l | grep -v "$BACKUP_SCRIPT" | crontab -
+}
+
+show_menu() {
+    clear
+    echo -e "
+  ${green}S-UI backup Management Script ${plain}
+————————————————————————————————
+  ${green}0.${plain} Exit
+————————————————————————————————
+  ${green}1.${plain} Let's Config 
+————————————————————————————————
+  ${green}2.${plain} Start Cronjob
+  ${green}3.${plain} Stop Cronjob
+————————————————————————————————
+  ${green}9.${plain} Uninstall
+————————————————————————————————
+ "
+    show_status $ENV_FILE
+
+    if crontab -l | grep -q "$BACKUP_SCRIPT"; then
+        echo -e "Cronjob state: ${green}Active${plain}"
+    else
+        echo -e "Cronjob state: ${yellow}Not active${plain}"
+    fi
+
+    echo && read -p "Please enter your selection [0-27]: " num
+
+    case "${num}" in
+    0)
+        clear
+        exit 0
+        ;;
+    1)
+        clear
+        configurat
+        ;;
+    2)
+        clear
+        cronStart
+        ;;
+    3)
+        clear
+        cronStop
+        ;;
+    9)
+        clear
+        Uninstall
+        ;;
+    *)
+        LOGE "Please enter the correct number [0-1]"
+        ;;
+    esac
+}
+
+installPrev() {
+    echo "Checking for required packages..."
+
+    REQUIRED_PACKAGES=("zip" "curl" "split")
+    for pkg in "${REQUIRED_PACKAGES[@]}"; do
+        if ! command -v "$pkg" &>/dev/null; then
+            echo "$pkg not found. Installing..."
+            sudo apt update && sudo apt install -y "$pkg"
+            if [ $? -eq 0 ]; then
+                echo "$pkg installed successfully!"
+            else
+                echo "Failed to install $pkg. Please check your system."
+                exit 1
+            fi
+        else
+            echo "$pkg is already installed."
+        fi
+    done
+    before_show_menu
+
+}
+
+while true; do
+    show_menu
+    read -p "Please select an option: " choice
+    echo ""
+done
+
+printf "\033[?1049l"
