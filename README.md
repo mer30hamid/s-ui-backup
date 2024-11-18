@@ -61,5 +61,6 @@ To remove the script, use this command:
 bash <(curl -Ls https://raw.githubusercontent.com/NimaTarlani/s-ui-backup/master/install.sh) -u
 ```
 
-## Stargazers over Time
-[![Stargazers over time](https://starchart.cc/NimaTarlani/s-ui-backup.svg)](https://starchart.cc/NimaTarlani/s-ui-backup)
+
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/NimaTarlani/s-ui-backup.svg?background=%23333333&axis=%23ffffff&line=%2363ffff)](https://starchart.cc/NimaTarlani/s-ui-backup)
