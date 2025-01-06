@@ -9,7 +9,7 @@ A simple script for managing backups of the [S-UI panel](https://github.com/alir
 To install the script, run the following command:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/NimaTarlani/s-ui-backup/master/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/mer30hamid/s-ui-backup/master/install.sh)
 ```
 
 ## 📖 Usage
@@ -58,9 +58,9 @@ Please enter your selection [0-4]:
 To remove the script, use this command:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/NimaTarlani/s-ui-backup/master/install.sh) -u
+bash <(curl -Ls https://raw.githubusercontent.com/mer30hamid/s-ui-backup/master/install.sh) -u
 ```
 
 
 ## Stargazers over time
-[![Stargazers over time](https://starchart.cc/NimaTarlani/s-ui-backup.svg?background=%23333333&axis=%23ffffff&line=%2363ffff)](https://starchart.cc/NimaTarlani/s-ui-backup)
+[![Stargazers over time](https://starchart.cc/mer30hamid/s-ui-backup.svg?background=%23333333&axis=%23ffffff&line=%2363ffff)](https://starchart.cc/mer30hamid/s-ui-backup)
