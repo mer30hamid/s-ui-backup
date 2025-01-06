@@ -138,7 +138,7 @@ source /path/to/.env
 backup_name="backup_$(date '+%Y%m%d_%H%M%S').zip"
 backup_path="$BACKUP_DIR$backup_name"
 
-zip -9 -r "$backup_path" "$BACKUP_FOLDER"
+zip -9 -r "$backup_path" "$BACKUP_FOLDER" -x "$BACKUP_FOLDER"sui "$BACKUP_FOLDER"bin/sing-box
 
 file_size=$(stat -c%s "$backup_path")
 
