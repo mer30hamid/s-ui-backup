@@ -154,7 +154,7 @@ BACKUP_LIST=$PANEL_DIR
 
 if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
     BACKUP_LIST=$BACKUP_LIST" "$NGINX_DIR
-else
+fi
 
 zip -9 -r "$backup_path" "$BACKUP_LIST" -x "$PANEL_DIR"sui "$PANEL_DIR"bin/sing-box
 
