@@ -116,14 +116,14 @@ configurat() {
         echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
-        read backup_interval
-        backup_interval=${backup_interval:-1}
-        if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
-            echo "BACKUP_INTERVAL=\"$backup_interval\"" >>$ENV_FILE
+        read BACKUP_INTERVAL
+        BACKUP_INTERVAL=${BACKUP_INTERVAL:-1}
+        if [[ "$BACKUP_INTERVAL" =~ ^[0-9]+$ && "$BACKUP_INTERVAL" -gt 0 ]]; then
+            echo "BACKUP_INTERVAL=\"$BACKUP_INTERVAL\"" >>$ENV_FILE
         else
             print_message $RED "Invalid input. Defaulting to daily (1 day)."
             echo "BACKUP_INTERVAL=\"1\"" >>$ENV_FILE
-            backup_interval=1
+            BACKUP_INTERVAL=1
         fi
     else
         source $ENV_FILE
@@ -189,7 +189,7 @@ EOF
 
     chmod +x $BACKUP_SCRIPT
 
-    cron_schedule="0 0 */$backup_interval * *"
+    cron_schedule="0 0 */$BACKUP_INTERVAL * *"
 
     (crontab -l | grep -q "$BACKUP_SCRIPT") && (crontab -r | grep -q "$BACKUP_SCRIPT") && exit 0
 
