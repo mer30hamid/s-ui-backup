@@ -2,8 +2,9 @@
 
 ENV_FILE=".env"
 BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
-BACKUP_FOLDER="/usr/local/s-ui/"
 BACKUP_DIR="/tmp/backups/"
+PANEL_DIR="/usr/local/s-ui/"
+NGINX_DIR="/etc/nginx/"
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -112,8 +113,19 @@ configurat() {
     if [ ! -f $ENV_FILE ]; then    
         prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
         prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
-        echo "BACKUP_FOLDER=\"$BACKUP_FOLDER\"" >>$ENV_FILE
+        echo -e "${CYAN}Do you want to enable NGINX backup? (y/n):${RESET} "
+        read ENABLE_NGINX_BACKUP
+
+        if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
+            echo "ENABLE_NGINX_BACKUP=\"$ENABLE_NGINX_BACKUP\"" >>$ENV_FILE
+        else
+            echo "ENABLE_NGINX_BACKUP=n" >>$ENV_FILE
+        fi
+        
+        # echo "BACKUP_LIST=\"$BACKUP_LIST\"" >>$ENV_FILE
         echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
+        echo "PANEL_DIR=\"$PANEL_DIR\"" >>$ENV_FILE
+        echo "NGINX_DIR=\"$NGINX_DIR\"" >>$ENV_FILE
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
         read BACKUP_INTERVAL
@@ -138,8 +150,13 @@ source /path/to/.env
 
 backup_name="$(hostname)_$(date '+%Y%m%d_%H%M%S').zip"
 backup_path="$BACKUP_DIR$backup_name"
+BACKUP_LIST=$PANEL_DIR
 
-zip -9 -r "$backup_path" "$BACKUP_FOLDER" -x "$BACKUP_FOLDER"sui "$BACKUP_FOLDER"bin/sing-box
+if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
+    BACKUP_LIST=$BACKUP_LIST" "$NGINX_DIR
+else
+
+zip -9 -r "$backup_path" "$BACKUP_LIST" -x "$PANEL_DIR"sui "$PANEL_DIR"bin/sing-box
 
 file_size=$(stat -c%s "$backup_path")
 
