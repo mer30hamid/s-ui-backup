@@ -5,6 +5,7 @@ BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
 BACKUP_DIR="/tmp/backups/"
 PANEL_DIR="/usr/local/s-ui/"
 NGINX_DIR="/etc/nginx/"
+CERTBOT_DIRS="/etc/letsencrypt/live/ /etc/letsencrypt/renewal/ /etc/letsencrypt/accounts/"
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -113,19 +114,14 @@ configurat() {
     if [ ! -f $ENV_FILE ]; then    
         prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
         prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
-        echo -e "${CYAN}Do you want to enable NGINX backup? (y/n):${RESET} "
-        read ENABLE_NGINX_BACKUP
-
-        if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
-            echo "ENABLE_NGINX_BACKUP=\"$ENABLE_NGINX_BACKUP\"" >>$ENV_FILE
-        else
-            echo "ENABLE_NGINX_BACKUP=n" >>$ENV_FILE
-        fi
+        prompt_input "ENABLE_NGINX_BACKUP" "Do you want to enable NGINX backup? (y/n):" "n"
+        prompt_input "ENABLE_CERTBOT_BACKUP" "Do you want to enable Backing up your existing Certbot configuration and certificates? (y/n):" "n"
         
         # echo "BACKUP_LIST=\"$BACKUP_LIST\"" >>$ENV_FILE
         echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
         echo "PANEL_DIR=\"$PANEL_DIR\"" >>$ENV_FILE
         echo "NGINX_DIR=\"$NGINX_DIR\"" >>$ENV_FILE
+        echo "CERTBOT_DIRS=\"$CERTBOT_DIRS\"" >>$ENV_FILE
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
         read BACKUP_INTERVAL
@@ -154,6 +150,10 @@ BACKUP_LIST=$PANEL_DIR
 
 if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
     BACKUP_LIST=$BACKUP_LIST" "$NGINX_DIR
+fi
+
+if [[ "$ENABLE_CERTBOT_BACKUP" = "y" ]]; then
+    BACKUP_LIST=$BACKUP_LIST" "$CERTBOT_DIRS
 fi
 
 zip -9 -r "$backup_path" $BACKUP_LIST -x "$PANEL_DIR"sui "$PANEL_DIR"bin/sing-box
