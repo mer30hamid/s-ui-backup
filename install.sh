@@ -98,14 +98,14 @@ configurat() {
         print_message $YELLOW "Existing configuration found:"
         cat $ENV_FILE
         echo
-        echo -e "${CYAN}Do you want to use the configuration? (y/n):${RESET} "
+        echo -e "${CYAN}Do you want to reset the configuration? (y/n):${RESET} "
         read reset_config
 
-        if [[ "$reset_config" != "n" ]]; then
-            print_message $GREEN "Using existing configuration."
-        else
+        if [[ "$reset_config" = "y" ]]; then
             print_message $YELLOW "Resetting configuration..."
             rm $ENV_FILE
+        else
+            print_message $GREEN "Using existing configuration."
         fi
     fi
 
