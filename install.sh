@@ -102,10 +102,10 @@ configurat() {
         read reset_config
 
         if [[ "$reset_config" != "n" ]]; then
+            print_message $GREEN "Using existing configuration."
+        else
             print_message $YELLOW "Resetting configuration..."
             rm $ENV_FILE
-        else
-            print_message $GREEN "Using existing configuration."
         fi
     fi
 
