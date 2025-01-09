@@ -98,35 +98,36 @@ configurat() {
         print_message $YELLOW "Existing configuration found:"
         cat $ENV_FILE
         echo
-        echo -e "${CYAN}Do you want to reset the configuration? (y/n):${RESET} "
+        echo -e "${CYAN}Do you want to use the configuration? (y/n):${RESET} "
         read reset_config
 
-        if [[ "$reset_config" != "y" ]]; then
-            print_message $GREEN "Using existing configuration. Exiting setup."
-            exit 0
+        if [[ "$reset_config" != "n" ]]; then
+            print_message $YELLOW "Resetting configuration..."
+            rm $ENV_FILE
+        else
+            print_message $GREEN "Using existing configuration."
         fi
-
-        print_message $YELLOW "Resetting configuration..."
-        rm $ENV_FILE
     fi
 
-    prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
-    prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
-    echo "BACKUP_FOLDER=\"$BACKUP_FOLDER\"" >>$ENV_FILE
-    echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
-
-    echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
-    read backup_interval
-    backup_interval=${backup_interval:-1}
-    if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
-        echo "BACKUP_INTERVAL=\"$backup_interval\"" >>$ENV_FILE
+    if [ ! -f $ENV_FILE ]; then    
+        prompt_input "TELEGRAM_BOT_TOKEN" "Enter your Telegram bot token" ""
+        prompt_input "TELEGRAM_CHAT_ID" "Enter your Telegram chat ID" ""
+        echo "BACKUP_FOLDER=\"$BACKUP_FOLDER\"" >>$ENV_FILE
+        echo "BACKUP_DIR=\"$BACKUP_DIR\"" >>$ENV_FILE
+        
+        echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
+        read backup_interval
+        backup_interval=${backup_interval:-1}
+        if [[ "$backup_interval" =~ ^[0-9]+$ && "$backup_interval" -gt 0 ]]; then
+            echo "BACKUP_INTERVAL=\"$backup_interval\"" >>$ENV_FILE
+        else
+            print_message $RED "Invalid input. Defaulting to daily (1 day)."
+            echo "BACKUP_INTERVAL=\"1\"" >>$ENV_FILE
+            backup_interval=1
+        fi
     else
-        print_message $RED "Invalid input. Defaulting to daily (1 day)."
-        echo "BACKUP_INTERVAL=\"1\"" >>$ENV_FILE
-        backup_interval=1
+        source $ENV_FILE
     fi
-    BACKUP_FOLDER="/usr/local/s-ui/"
-    BACKUP_DIR="/tmp/backups/"
 
     mkdir -p $BACKUP_DIR
 
