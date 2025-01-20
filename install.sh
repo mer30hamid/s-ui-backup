@@ -122,6 +122,8 @@ configurat() {
         echo "PANEL_DIR=\"$PANEL_DIR\"" >>$ENV_FILE
         echo "NGINX_DIR=\"$NGINX_DIR\"" >>$ENV_FILE
         echo "CERTBOT_DIRS=\"$CERTBOT_DIRS\"" >>$ENV_FILE
+        echo "OTHER_DIRS=\"\"" >>$ENV_FILE
+        echo "EXCEPT_DIRS=\"\"" >>$ENV_FILE
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
         read BACKUP_INTERVAL
@@ -156,7 +158,11 @@ if [[ "$ENABLE_CERTBOT_BACKUP" = "y" ]]; then
     BACKUP_LIST=$BACKUP_LIST" "$CERTBOT_DIRS
 fi
 
-zip -9 -r "$backup_path" $BACKUP_LIST -x "$PANEL_DIR"sui "$PANEL_DIR"bin/sing-box
+EXCEPT_DIRS=$EXCEPT_DIRS" "${PANEL_DIR}sui" "${PANEL_DIR}bin/sing-box
+
+BACKUP_LIST=$BACKUP_LIST" "$OTHER_DIRS
+
+zip -9 -r "$backup_path" $BACKUP_LIST -x $EXCEPT_DIRS
 
 file_size=$(stat -c%s "$backup_path")
 
