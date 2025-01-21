@@ -158,7 +158,7 @@ if [[ "$ENABLE_CERTBOT_BACKUP" = "y" ]]; then
     BACKUP_LIST=$BACKUP_LIST" "$CERTBOT_DIRS
 fi
 
-zip -9 -r "$backup_path" $BACKUP_LIST -x $EXCLUDE_FILES
+zip -9 -r "$backup_path" "$BACKUP_LIST" -x "$EXCLUDE_FILES"
 
 file_size=$(stat -c%s "$backup_path")
 
