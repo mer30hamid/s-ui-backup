@@ -123,7 +123,7 @@ configurat() {
         echo "PANEL_DIR=\"$PANEL_DIR\"" >>$ENV_FILE
         echo "NGINX_DIR=\"$NGINX_DIR\"" >>$ENV_FILE
         echo "CERTBOT_DIRS=\"$CERTBOT_DIRS\"" >>$ENV_FILE
-        echo "EXCLUDE_FILES=\"\"${PANEL_DIR}sui\"" "\"${PANEL_DIR}bin/sing-box\"" >>$ENV_FILE
+        echo "EXCLUDE_FILES=\"${PANEL_DIR}sui" "${PANEL_DIR}bin/sing-box\"" >>$ENV_FILE
 
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
