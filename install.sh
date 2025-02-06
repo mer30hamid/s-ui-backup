@@ -122,7 +122,7 @@ configurat() {
         echo "BACKUP_DIR='$BACKUP_DIR'" >>$ENV_FILE
         echo "PANEL_DIR='$PANEL_DIR'" >>$ENV_FILE
         echo "NGINX_DIR='$NGINX_DIR'" >>$ENV_FILE
-        echo "CERTBOT_DIRS=(\"${CERTBOT_DIRS[@]}\")" >>$ENV_FILE
+        echo "CERTBOT_DIRS=( $(printf '\"%s\" ' "${CERTBOT_DIRS[@]}") )" >>$ENV_FILE
         echo "EXCLUDE_FILES=('${PANEL_DIR}sui' '${PANEL_DIR}bin/sing-box')" >>$ENV_FILE
 
 
