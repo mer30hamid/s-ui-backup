@@ -3,10 +3,10 @@
 ENV_FILE=".env"
 BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
 BACKUP_DIR="/tmp/backups/"
-PANEL_DIR="/usr/local/s-ui/"
+PANEL_DIR="\"/usr/local/s-ui/\""
 BACKUP_LIST=$PANEL_DIR
-NGINX_DIR="/etc/nginx/"
-CERTBOT_DIRS="/etc/letsencrypt/live/ /etc/letsencrypt/renewal/ /etc/letsencrypt/accounts/"
+NGINX_DIR="\"/etc/nginx/\""
+CERTBOT_DIRS="\"/etc/letsencrypt/live/\" \"/etc/letsencrypt/renewal/\" \"/etc/letsencrypt/accounts/\""
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -123,7 +123,7 @@ configurat() {
         echo "PANEL_DIR=\"$PANEL_DIR\"" >>$ENV_FILE
         echo "NGINX_DIR=\"$NGINX_DIR\"" >>$ENV_FILE
         echo "CERTBOT_DIRS=\"$CERTBOT_DIRS\"" >>$ENV_FILE
-        echo "EXCLUDE_FILES=\"${PANEL_DIR}sui" "${PANEL_DIR}bin/sing-box\"" >>$ENV_FILE
+        echo "EXCLUDE_FILES=\"\"${PANEL_DIR}sui\"" "\"${PANEL_DIR}bin/sing-box\"" >>$ENV_FILE
 
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
@@ -158,7 +158,7 @@ if [[ "$ENABLE_CERTBOT_BACKUP" = "y" ]]; then
     BACKUP_LIST=$BACKUP_LIST" "$CERTBOT_DIRS
 fi
 
-zip -9 -r "$backup_path" "$BACKUP_LIST" -x "$EXCLUDE_FILES"
+zip -9 -r "$backup_path" $BACKUP_LIST -x $EXCLUDE_FILES
 
 file_size=$(stat -c%s "$backup_path")
 
