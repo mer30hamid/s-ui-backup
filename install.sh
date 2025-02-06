@@ -4,7 +4,7 @@ ENV_FILE=".env"
 BACKUP_SCRIPT="/usr/local/bin/backup_and_send.sh"
 BACKUP_DIR="/tmp/backups/"
 PANEL_DIR="/usr/local/s-ui/"
-BACKUP_LIST="$PANEL_DIR"
+BACKUP_LIST=("$PANEL_DIR")
 NGINX_DIR="/etc/nginx/"
 CERTBOT_DIRS="/etc/letsencrypt/live/ /etc/letsencrypt/renewal/ /etc/letsencrypt/accounts/"
 
@@ -123,7 +123,7 @@ configurat() {
         echo "PANEL_DIR='$PANEL_DIR'" >>$ENV_FILE
         echo "NGINX_DIR='$NGINX_DIR'" >>$ENV_FILE
         echo "CERTBOT_DIRS='$CERTBOT_DIRS'" >>$ENV_FILE
-        echo "EXCLUDE_FILES='${PANEL_DIR}sui ${PANEL_DIR}bin/sing-box'" >>$ENV_FILE
+        echo "EXCLUDE_FILES=('${PANEL_DIR}sui' '${PANEL_DIR}bin/sing-box')" >>$ENV_FILE
 
 
         
@@ -152,14 +152,14 @@ backup_name="$(hostname)_$(date '+%Y%m%d_%H%M%S').zip"
 backup_path="$BACKUP_DIR$backup_name"
 
 if [[ "$ENABLE_NGINX_BACKUP" = "y" ]]; then
-    BACKUP_LIST=$BACKUP_LIST" "$NGINX_DIR
+    BACKUP_LIST+=("$NGINX_DIR")
 fi
 
 if [[ "$ENABLE_CERTBOT_BACKUP" = "y" ]]; then
-    BACKUP_LIST=$BACKUP_LIST" "$CERTBOT_DIRS
+    BACKUP_LIST+=("$CERTBOT_DIRS)
 fi
 
-zip -9 -r "$backup_path" "$BACKUP_LIST" -x "$EXCLUDE_FILES"
+zip -9 -r "$backup_path" "${BACKUP_LIST[@]}" -x "${EXCLUDE_FILES[@]}"
 
 file_size=$(stat -c%s "$backup_path")
 
