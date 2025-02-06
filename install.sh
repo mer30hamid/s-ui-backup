@@ -118,22 +118,23 @@ configurat() {
         prompt_input "ENABLE_NGINX_BACKUP" "Do you want to enable NGINX backup? (y/n):" "n"
         prompt_input "ENABLE_CERTBOT_BACKUP" "Do you want to enable Backing up your existing Certbot configuration and certificates? (y/n):" "n"
         
-        echo "BACKUP_LIST=\'$BACKUP_LIST\'" >>$ENV_FILE
-        echo "BACKUP_DIR=\'$BACKUP_DIR\'" >>$ENV_FILE
-        echo "PANEL_DIR=\'$PANEL_DIR\'" >>$ENV_FILE
-        echo "NGINX_DIR=\'$NGINX_DIR\'" >>$ENV_FILE
-        echo "CERTBOT_DIRS=\'$CERTBOT_DIRS\'" >>$ENV_FILE
-        echo "EXCLUDE_FILES=\'${PANEL_DIR}sui" "${PANEL_DIR}bin/sing-box\'" >>$ENV_FILE
+        echo "BACKUP_LIST='$BACKUP_LIST'" >>$ENV_FILE
+        echo "BACKUP_DIR='$BACKUP_DIR'" >>$ENV_FILE
+        echo "PANEL_DIR='$PANEL_DIR'" >>$ENV_FILE
+        echo "NGINX_DIR='$NGINX_DIR'" >>$ENV_FILE
+        echo "CERTBOT_DIRS='$CERTBOT_DIRS'" >>$ENV_FILE
+        echo "EXCLUDE_FILES='\"${PANEL_DIR}sui\" \"${PANEL_DIR}bin/sing-box\"'" >>$ENV_FILE
+
 
         
         echo -e "${CYAN}Enter the backup interval in days (e.g., 1 for daily, 8 for every 8 days) [1]:${RESET} "
         read BACKUP_INTERVAL
         BACKUP_INTERVAL=${BACKUP_INTERVAL:-1}
         if [[ "$BACKUP_INTERVAL" =~ ^[0-9]+$ && "$BACKUP_INTERVAL" -gt 0 ]]; then
-            echo "BACKUP_INTERVAL=\'$BACKUP_INTERVAL\'" >>$ENV_FILE
+            echo "BACKUP_INTERVAL='$BACKUP_INTERVAL'" >>$ENV_FILE
         else
             print_message $RED "Invalid input. Defaulting to daily (1 day)."
-            echo "BACKUP_INTERVAL=\"1\"" >>$ENV_FILE
+            echo "BACKUP_INTERVAL='1'" >>$ENV_FILE
             BACKUP_INTERVAL=1
         fi
     else
